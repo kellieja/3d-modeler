@@ -1,0 +1,757 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Karma Card Social Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=Figtree:wght@400;500;600;700&display=swap">
+<style>/* ==========================================================================
+   Karma Card Payments — Social Design Kit
+   Canvas styles shared by every post template.
+
+   Concept: every post is a "transaction receipt". A mono receipt strip at the
+   top, the message in the middle, a settlement footer at the bottom, and the
+   Karma Ring (what goes around comes around) anchored to the same corner.
+   ========================================================================== */
+
+/* ---- Brand tokens (swap these to re-skin the whole kit) ----------------- */
+:root {
+  --kc-vault:   #12204A;  /* primary ink / dark backgrounds */
+  --kc-vault-2: #1B2D63;  /* raised panels on vault */
+  --kc-paper:   #F2F4F8;  /* light backgrounds (cool, not cream) */
+  --kc-white:   #FFFFFF;
+  --kc-gold:    #E8B44A;  /* Karma Gold: highlight, ring, CTA */
+  --kc-teal:    #12806F;  /* Settle Teal: accents & labels on paper */
+  --kc-slate:   #56618A;  /* secondary text on paper */
+  --kc-mist:    #AFB8D6;  /* secondary text on vault */
+  --kc-coral:   #D9583F;  /* "declined" marker only, use sparingly */
+  --kc-line:    rgba(18, 32, 74, .14);
+
+  --kc-display: "Bricolage Grotesque", "Arial Narrow", Arial, sans-serif;
+  --kc-body:    "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --kc-mono:    "IBM Plex Mono", "Courier New", monospace;
+}
+
+/* ---- Canvas sizes ------------------------------------------------------- */
+/* L = Facebook landscape, P = Instagram/Facebook portrait feed, S = Story */
+.kc-post {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--kc-body);
+  -webkit-font-smoothing: antialiased;
+}
+.kc-post *, .kc-post *::before, .kc-post *::after { box-sizing: border-box; }
+
+.size-L { width: 1200px; height: 630px;
+  --m: 56px; --top: 40px; --bot: 36px; --gap: 22px;
+  --t-display: 70px; --t-h1: 56px; --t-h2: 36px; --t-body: 23px; --t-label: 16px; --t-micro: 13px;
+  --ring: 360px; --mark: 34px; }
+.size-P { width: 1080px; height: 1350px;
+  --m: 80px; --top: 64px; --bot: 56px; --gap: 32px;
+  --t-display: 112px; --t-h1: 84px; --t-h2: 54px; --t-body: 34px; --t-label: 22px; --t-micro: 18px;
+  --ring: 640px; --mark: 48px; }
+.size-S { width: 1080px; height: 1920px;
+  /* top 220px + bottom 300px stay clear of Story UI (profile bar, reply box) */
+  --m: 88px; --top: 220px; --bot: 300px; --gap: 36px;
+  --t-display: 124px; --t-h1: 92px; --t-h2: 58px; --t-body: 38px; --t-label: 24px; --t-micro: 20px;
+  --ring: 760px; --mark: 52px; }
+
+.kc-post { padding: var(--top) var(--m) var(--bot); gap: var(--gap); }
+
+/* ---- Colour modes ------------------------------------------------------- */
+.mode-paper { background: var(--kc-paper); color: var(--kc-vault); --accent: var(--kc-teal); --sub: var(--kc-slate); --ring-c: var(--kc-gold); --chip-bg: var(--kc-white); --rule: rgba(18, 32, 74, .28); }
+.mode-vault { background: var(--kc-vault); color: var(--kc-white); --accent: var(--kc-gold); --sub: var(--kc-mist); --ring-c: var(--kc-gold); --chip-bg: var(--kc-vault-2); --rule: rgba(255, 255, 255, .28); }
+.mode-gold  { background: var(--kc-gold);  color: var(--kc-vault); --accent: var(--kc-vault); --sub: #4A3E1E; --ring-c: var(--kc-white); --chip-bg: rgba(255,255,255,.55); --rule: rgba(18, 32, 74, .28); }
+
+/* ---- Brand element 1: receipt strip ------------------------------------- */
+.kc-strip {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--kc-mono); font-weight: 600;
+  font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase;
+  padding-bottom: calc(var(--gap) * .6);
+  border-bottom: 2px dashed var(--rule);
+}
+.kc-strip .kc-id { color: var(--sub); }
+.kc-chip {
+  display: inline-flex; align-items: center; gap: .6em;
+  background: var(--chip-bg); color: inherit;
+  padding: .55em 1em; border-radius: 999px;
+}
+.kc-dot { width: .7em; height: .7em; border-radius: 50%; background: var(--accent); display: block; flex: none; }
+.mode-vault .kc-dot { background: var(--kc-gold); }
+
+/* ---- Brand element 2: settlement footer --------------------------------- */
+.kc-foot {
+  position: relative; z-index: 2; margin-top: auto;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--kc-mono); font-weight: 500; font-size: var(--t-label); letter-spacing: .06em;
+  color: var(--sub);
+}
+.kc-mark { display: inline-flex; align-items: center; gap: .35em; font-family: var(--kc-display); font-weight: 800;
+  font-size: var(--mark); letter-spacing: -.02em; color: inherit; line-height: 1; }
+.kc-post .kc-foot .kc-mark { color: var(--kc-vault); }
+.mode-vault .kc-foot .kc-mark { color: var(--kc-white); }
+.kc-mark i { width: .78em; height: .78em; border-radius: 50%; border: .17em solid var(--kc-gold); display: inline-block; }
+.mode-gold .kc-mark i { border-color: var(--kc-vault); }
+.kc-mark b { font-weight: 500; font-family: var(--kc-mono); font-size: .4em; letter-spacing: .16em; text-transform: uppercase; align-self: center; margin-left: .3em; opacity: .7; }
+
+/* ---- Brand element 3: Karma Ring (always bottom-right, cropped) --------- */
+.kc-ring {
+  position: absolute; z-index: 0; pointer-events: none;
+  width: var(--ring); height: var(--ring);
+  right: calc(var(--ring) * -0.38); bottom: calc(var(--ring) * -0.38);
+  border-radius: 50%;
+  border: calc(var(--ring) * .055) solid var(--ring-c);
+  opacity: .9;
+}
+.kc-ring-in { position: absolute; z-index: 0; pointer-events: none; border-radius: 50%;
+  width: calc(var(--ring) * .64); height: calc(var(--ring) * .64);
+  right: calc(var(--ring) * -0.2); bottom: calc(var(--ring) * -0.2);
+  border: 2px dashed var(--ring-c); opacity: .5; }
+.mode-paper .kc-ring-in { right: calc(var(--ring) * -0.32); bottom: calc(var(--ring) * -0.32); opacity: .35; }
+.mode-paper .kc-ring { opacity: .45; right: calc(var(--ring) * -0.5); bottom: calc(var(--ring) * -0.5); }
+
+/* ---- Type hierarchy ------------------------------------------------------ */
+.kc-body { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; gap: var(--gap); min-height: 0; }
+.kc-eyebrow { font-family: var(--kc-mono); font-weight: 600; font-size: var(--t-label); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.kc-display { font-family: var(--kc-display); font-weight: 800; font-size: var(--t-display); line-height: .96; letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+.kc-h1 { font-family: var(--kc-display); font-weight: 700; font-size: var(--t-h1); line-height: 1; letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.kc-h2 { font-family: var(--kc-display); font-weight: 700; font-size: var(--t-h2); line-height: 1.06; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.kc-text { font-size: var(--t-body); line-height: 1.38; font-weight: 500; margin: 0; color: var(--sub); max-width: 19em; }
+.mode-vault .kc-text { color: var(--kc-mist); }
+.kc-micro { font-size: var(--t-micro); line-height: 1.35; color: var(--sub); margin: 0; font-weight: 500; }
+.kc-hl { background: linear-gradient(transparent 58%, rgba(232, 180, 74, .7) 58%, rgba(232, 180, 74, .7) 92%, transparent 92%); padding: 0 .04em; }
+.mode-vault .kc-hl, .mode-gold .kc-hl { background: none; color: var(--kc-gold); }
+.mode-gold .kc-hl { color: var(--kc-white); }
+.kc-strike { position: relative; color: var(--sub); text-decoration: none; }
+.kc-strike-line { position: absolute; left: -2%; right: -2%; top: 52%; height: .09em; background: var(--kc-coral); transform: rotate(-3deg); display: block; }
+
+/* ---- CTA pill ---------------------------------------------------------- */
+.kc-cta { align-self: flex-start; display: inline-flex; align-items: center; gap: .7em;
+  font-family: var(--kc-body); font-weight: 700; font-size: var(--t-body);
+  background: var(--kc-vault); color: var(--kc-white); padding: .62em 1.15em; border-radius: 999px; }
+.mode-vault .kc-cta { background: var(--kc-gold); color: var(--kc-vault); }
+
+/* ---- Image slot -------------------------------------------------------- */
+.kc-photo { position: relative; overflow: hidden; border-radius: calc(var(--gap) * .9);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 18px, rgba(255,255,255,.07) 18px 36px),
+    linear-gradient(160deg, var(--kc-vault-2), var(--kc-vault));
+  display: flex; align-items: flex-end; padding: calc(var(--gap) * .8); }
+.mode-vault .kc-photo { background:
+    repeating-linear-gradient(135deg, transparent 0 18px, rgba(255,255,255,.06) 18px 36px),
+    linear-gradient(160deg, #2A3F7E, var(--kc-vault-2)); }
+.kc-photo span { font-family: var(--kc-mono); font-size: var(--t-micro); letter-spacing: .12em; text-transform: uppercase; color: var(--kc-mist); }
+.kc-photo.round { border-radius: 50%; aspect-ratio: 1; align-items: center; justify-content: center; text-align: center; }
+
+.kc-copy, .kc-left { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+
+/* ==========================================================================
+   Layout templates
+   ========================================================================== */
+
+/* 1. TIP / EDUCATIONAL ---------------------------------------------------- */
+.t-tip .kc-body { justify-content: center; }
+.t-tip .kc-num { font-family: var(--kc-display); font-weight: 800; color: var(--accent); font-size: calc(var(--t-display) * 1.5); line-height: .8; letter-spacing: -.05em; }
+.size-L.t-tip .kc-body { display: grid; grid-template-columns: 220px 1fr; column-gap: 40px; align-content: center; }
+.size-L.t-tip .kc-num { grid-row: span 3; align-self: start; }
+
+/* 2. CAROUSEL (tutorial) -------------------------------------------------- */
+.t-cover .kc-body { justify-content: flex-end; }
+.t-cover .kc-swipe { font-family: var(--kc-mono); font-weight: 600; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.kc-dots { display: flex; gap: .5em; }
+.kc-dots i { width: .7em; height: .7em; border-radius: 50%; background: currentColor; opacity: .25; display: block; }
+.kc-dots i.on { opacity: 1; background: var(--accent); width: 2em; border-radius: 999px; }
+.t-step .kc-body { justify-content: center; }
+.t-step .kc-stepno { display: flex; align-items: baseline; gap: .4em; font-family: var(--kc-mono); font-weight: 600; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.t-step .kc-stepno strong { font-family: var(--kc-display); font-size: calc(var(--t-display) * 1.1); letter-spacing: -.04em; color: var(--kc-vault); line-height: .8; }
+.kc-check { display: grid; gap: calc(var(--gap) * .5); margin: 0; padding: 0; list-style: none; font-size: var(--t-body); font-weight: 600; }
+.kc-check li { display: flex; gap: .6em; align-items: baseline; }
+.kc-check b { font-family: var(--kc-mono); color: var(--accent); font-weight: 600; }
+.size-L.t-step .kc-body { display: grid; grid-template-columns: 1.1fr 1fr; column-gap: 48px; align-content: center; }
+.size-L.t-step .kc-left { display: flex; flex-direction: column; gap: var(--gap); }
+.t-cta .kc-body { justify-content: center; }
+
+/* 3. QUOTE ---------------------------------------------------------------- */
+.t-quote .kc-body { justify-content: center; }
+.t-quote .kc-qmark { font-family: var(--kc-display); font-weight: 800; font-size: calc(var(--t-display) * 2.2); line-height: .55; height: .45em; color: var(--kc-white); }
+.t-quote blockquote { margin: 0; }
+.t-quote .kc-attr { font-family: var(--kc-mono); font-weight: 600; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; }
+.t-quote .kc-attr { display: flex; align-items: center; gap: .8em; }
+.t-quote .kc-rule { display: block; width: 2.5em; height: 2px; background: var(--kc-vault); flex: none; }
+
+/* 4. ANNOUNCEMENT --------------------------------------------------------- */
+.t-announce .kc-photo { flex: 1; min-height: 0; }
+.t-announce .kc-meta { display: flex; flex-wrap: wrap; gap: .5em 1.6em; font-family: var(--kc-mono); font-weight: 600; font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--kc-gold); }
+
+.size-L.t-announce .kc-body { flex-direction: row; }
+.size-L.t-announce .kc-copy { flex: 1.25; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); }
+.size-L.t-announce .kc-photo { flex: 1; }
+.size-S.t-announce .kc-photo { flex: 0 0 560px; }
+
+/* 5. TESTIMONIAL ---------------------------------------------------------- */
+.t-testimonial .kc-body { justify-content: center; }
+.t-testimonial .kc-stars { font-size: calc(var(--t-h2) * .8); letter-spacing: .12em; color: var(--kc-gold); line-height: 1; }
+.t-testimonial .kc-who { display: flex; align-items: center; gap: calc(var(--gap) * .8); }
+.t-testimonial .kc-who .kc-photo { width: calc(var(--t-h1) * 1.7); flex: none; padding: 0; }
+.t-testimonial .kc-who strong { display: block; font-family: var(--kc-display); font-size: var(--t-h2); font-size: calc(var(--t-h2) * .7); }
+.t-testimonial .kc-who span { font-family: var(--kc-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--sub); }
+.t-testimonial .kc-tag { align-self: flex-start; font-family: var(--kc-mono); font-size: var(--t-micro); letter-spacing: .12em; text-transform: uppercase; border: 2px dashed var(--kc-coral); color: var(--kc-coral); padding: .4em .8em; border-radius: 8px; }
+.size-L.t-testimonial .kc-body { display: grid; grid-template-columns: 1fr 300px; column-gap: 40px; align-content: center; }
+.size-L.t-testimonial .kc-side .kc-photo { width: 100%; }
+
+/* 6. PROMOTION ------------------------------------------------------------ */
+.t-promo .kc-body { justify-content: center; }
+.t-promo .kc-offer { display: flex; flex-direction: column; gap: calc(var(--gap) * .4); background: var(--kc-vault-2); border: 2px dashed rgba(232,180,74,.55); border-radius: calc(var(--gap) * .8); padding: calc(var(--gap) * .9) var(--gap); }
+.t-promo .kc-offer .kc-big { font-family: var(--kc-display); font-weight: 800; font-size: calc(var(--t-display) * 1.05); line-height: .9; letter-spacing: -.04em; color: var(--kc-gold); }
+.t-promo .kc-offer .kc-micro { color: var(--kc-mist); }
+.size-L.t-promo .kc-body { display: grid; grid-template-columns: 1.2fr 1fr; column-gap: 40px; align-content: center; align-items: center; }
+.kc-legal { position: relative; z-index: 2; font-size: var(--t-micro); color: var(--kc-mist); opacity: .85; margin: 0; }
+
+/* ---- Landscape refinements (1200×630 has ~40% less height) ------------- */
+.size-L.t-announce .kc-display { font-size: var(--t-h1); }
+.size-L.t-announce .kc-copy { gap: 16px; }
+.size-L.t-announce .kc-text { font-size: 21px; }
+.size-L.t-step .kc-check { align-self: center; }
+.size-L.t-testimonial .kc-body { grid-template-columns: 1fr 220px; }
+.size-L.t-testimonial .kc-side .kc-photo { width: 200px !important; }
+.size-L.t-testimonial .kc-who strong { font-size: 22px; }
+
+
+/* Layout: one 1120px reading column; template previews sit in a wrapping row of real canvases scaled with zoom. */
+:root {
+  --g-bg: #F7F8FB; --g-fg: #12204A; --g-sub: #56618A; --g-line: #DDE1EC;
+  --g-card: #FFFFFF; --g-accent: #12806F; --g-hero: #12204A; --g-hero-fg: #FFFFFF; --g-gold: #E8B44A;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --g-bg: #0B1330; --g-fg: #E9ECF5; --g-sub: #A3ACCB; --g-line: #26335F;
+  --g-card: #121D44; --g-accent: #4CC3AE; --g-hero: #060C22; --g-hero-fg: #FFFFFF; --g-gold: #E8B44A; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --g-bg: #0B1330; --g-fg: #E9ECF5; --g-sub: #A3ACCB; --g-line: #26335F;
+  --g-card: #121D44; --g-accent: #4CC3AE; --g-hero: #060C22; --g-hero-fg: #FFFFFF; --g-gold: #E8B44A; color-scheme: dark; }
+
+body { background: var(--g-bg); color: var(--g-fg); font-family: var(--kc-body); font-size: 16px; line-height: 1.55; margin: 0; }
+.g-wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); box-sizing: border-box; }
+code { font-family: var(--kc-mono); font-size: .88em; background: color-mix(in srgb, var(--g-accent) 12%, transparent); padding: .1em .35em; border-radius: 4px; }
+h1, h2, h3, h4 { font-family: var(--kc-display); letter-spacing: -.02em; text-wrap: balance; margin: 0; }
+h3 { font-size: 22px; font-weight: 700; }
+h4 { font-family: var(--kc-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--g-sub); font-weight: 600; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--g-gold); outline-offset: 2px; }
+
+.g-hero { background: var(--g-hero); color: var(--g-hero-fg); padding-block: 72px 56px; position: relative; overflow: hidden; }
+.g-hero::after { content: ""; position: absolute; width: 380px; height: 380px; right: -150px; bottom: -210px; border-radius: 50%; border: 24px solid var(--g-gold); opacity: .9; }
+.g-hero .g-wrap { position: relative; z-index: 1; display: grid; gap: 22px; }
+.g-hero h1 { font-size: clamp(40px, 7vw, 84px); font-weight: 800; line-height: .95; letter-spacing: -.035em; max-width: 12ch; }
+.g-hero h1 span { color: var(--g-gold); }
+.g-lede { font-size: clamp(17px, 2vw, 20px); color: #C4CBE3; max-width: 60ch; margin: 0; }
+.g-kicker { font-family: var(--kc-mono); font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--g-accent); margin: 0; }
+.g-hero .g-kicker { color: var(--g-gold); }
+.g-toc { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 2px dashed rgba(255,255,255,.2); }
+.g-toc a { font-family: var(--kc-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.08); }
+.g-toc a:hover { background: rgba(232,180,74,.25); }
+
+.g-sec { padding-block: 64px 8px; display: grid; gap: 20px; }
+.g-head { display: grid; gap: 6px; padding-bottom: 14px; border-bottom: 2px dashed var(--g-line); }
+.g-head h2 { font-size: clamp(30px, 4vw, 44px); font-weight: 800; line-height: 1; }
+.g-sec > p, .g-note { max-width: 68ch; margin: 0; }
+.g-note { color: var(--g-sub); font-size: 15px; }
+
+.g-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.g-sw { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: start; }
+.g-chip { height: 84px; border-radius: 14px; display: flex; align-items: flex-end; padding: 8px; box-shadow: inset 0 0 0 1px rgba(18,32,74,.12); }
+.g-chip span { font-family: var(--kc-mono); font-size: 11px; font-weight: 600; }
+.ink-light span { color: #fff; } .ink-dark span { color: #12204A; }
+.g-swtext { display: grid; gap: 2px; min-width: 0; }
+.g-swtext p { margin: 4px 0 0; font-size: 14px; color: var(--g-sub); line-height: 1.4; }
+.g-swtext code { justify-self: start; }
+
+.g-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.g-mode { border-radius: 16px; padding: 20px; display: grid; gap: 4px; min-height: 120px; align-content: end; box-shadow: inset 0 0 0 1px rgba(18,32,74,.1); }
+.g-mode strong { font-family: var(--kc-display); font-size: 28px; letter-spacing: -.02em; }
+.g-mode span { font-size: 14px; opacity: .85; }
+.g-mode em { font-style: normal; font-family: var(--kc-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+
+.g-table { overflow-x: auto; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-card); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--g-line); vertical-align: top; }
+th { font-family: var(--kc-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--g-sub); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-specimen { display: grid; gap: 10px; padding: 28px; border-radius: 16px; background: var(--g-card); border: 1px solid var(--g-line); }
+
+.g-zones { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+.g-zone { position: relative; margin: 0; background: var(--g-card); border: 1px solid var(--g-line); border-radius: 6px; max-width: 100%; }
+.g-zone:nth-child(1) { width: 300px; } .g-zone:nth-child(2) { width: 180px; } .g-zone:nth-child(3) { width: 150px; }
+.g-zone .z-top, .g-zone .z-bot { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, #D9583F 22%, transparent) 0 6px, transparent 6px 12px); }
+.g-zone .z-top { top: 0; } .g-zone .z-bot { bottom: 0; }
+.g-zone .z-safe { position: absolute; border: 1.5px dashed var(--g-accent); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+.g-zone .z-safe span, .g-zone figcaption { font-family: var(--kc-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--g-sub); }
+.g-zone figcaption { position: absolute; top: calc(100% + 6px); left: 0; white-space: nowrap; }
+.g-zones { padding-bottom: 24px; }
+
+.g-els { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.g-el { background: var(--g-card); border: 1px solid var(--g-line); border-radius: 14px; padding: 20px; display: grid; gap: 8px; align-content: start; }
+.g-el p { margin: 0; font-size: 15px; color: var(--g-sub); }
+.g-list { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 72ch; }
+.g-check { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 72ch; }
+.g-dodont { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.g-dodont > div { display: grid; gap: 10px; align-content: start; }
+
+.g-tpl { display: grid; gap: 16px; padding-block: 28px; border-bottom: 1px solid var(--g-line); break-inside: avoid; }
+.g-tplhead { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+.g-tplhead h3 { font-size: 28px; font-weight: 800; }
+.g-tags { display: flex; gap: 6px; margin: 0; }
+.g-tags span { font-family: var(--kc-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--g-line); color: var(--g-sub); }
+.g-when { margin: 0; max-width: 70ch; }
+.g-frames { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.g-frame { margin: 0; display: grid; gap: 6px; max-width: 100%; }
+.g-frame figcaption { font-family: var(--kc-mono); font-size: 11px; letter-spacing: .1em; color: var(--g-sub); }
+.g-canvas { border-radius: 6px; overflow: hidden; box-shadow: 0 1px 2px rgba(10,18,48,.12), 0 8px 24px -12px rgba(10,18,48,.35); width: max-content; max-width: 100%; }
+.g-L .g-canvas { zoom: .36; } .g-P .g-canvas { zoom: .3; } .g-S .g-canvas { zoom: .25; }
+.g-spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.g-spec > div { display: grid; gap: 8px; align-content: start; }
+.g-spec ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 15px; }
+.g-spec p { margin: 0 0 8px; font-size: 15px; color: var(--g-sub); }
+
+.g-foot { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding-block: 48px; font-family: var(--kc-mono); font-size: 12px; color: var(--g-sub); --mark: 28px; }
+.g-foot .kc-mark { color: var(--g-fg); }
+
+@media (max-width: 720px) {
+  .g-hero::after { width: 200px; height: 200px; right: -90px; bottom: -120px; border-width: 14px; }
+  .g-L .g-canvas { zoom: .28; } .g-P .g-canvas { zoom: .2; } .g-S .g-canvas { zoom: .17; }
+  .g-sec { padding-block: 44px 4px; }
+}
+@media print {
+  .g-toc { display: none; }
+  .g-table, .g-el, .g-specimen, .g-zones, .g-modes, .g-sw, .g-head, .g-spec, .g-dodont > div { break-inside: avoid; }
+  .g-head, h3 { break-after: avoid; }
+  .g-sec { break-before: auto; }
+  #templates, #imagery { break-before: page; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style></head><body>
+<header class="g-hero">
+  <div class="g-wrap">
+    <p class="g-kicker">Karma Card Payments · Social design kit · v1.0</p>
+    <h1>Every post reads like a <span>receipt.</span></h1>
+    <p class="g-lede">A repeatable system for Facebook and Instagram, written for high-risk merchants who've heard “no” before. Eight layouts, three sizes each, one set of rules. Swap the copy, keep the structure.</p>
+    <nav class="g-toc" aria-label="Sections">
+      <a href="#foundations">Foundations</a><a href="#grid">Grid &amp; sizes</a><a href="#elements">Brand elements</a><a href="#pillars">Content pillars</a><a href="#templates">Templates</a><a href="#imagery">Imagery</a><a href="#compliance">Compliance</a><a href="#checklist">Checklist</a>
+    </nav>
+  </div>
+</header>
+<main class="g-wrap">
+<section class="g-sec" id="foundations"><div class="g-head"><p class="g-kicker">01 · Foundations</p><h2>Colour and type</h2></div>
+  <p class="g-note">The site couldn't be read from this build environment, so these colours and fonts are a proposed system. Every value is a token in <code>src/kit.css</code>; change it there and all 24 canvases update.</p>
+  <div class="g-swatches">
+    <div class="g-sw"><div class="g-chip ink-light" style="background:#12204A"><span>#12204A</span></div>
+    <div class="g-swtext"><strong>Vault</strong><code>--kc-vault</code><p>Primary ink. Dark backgrounds for carousels, announcements, promotions.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-dark" style="background:#F2F4F8"><span>#F2F4F8</span></div>
+    <div class="g-swtext"><strong>Paper</strong><code>--kc-paper</code><p>Light backgrounds for tips, carousel steps and testimonials.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-dark" style="background:#E8B44A"><span>#E8B44A</span></div>
+    <div class="g-swtext"><strong>Karma Gold</strong><code>--kc-gold</code><p>The Karma Ring, highlights, CTAs on Vault, quote backgrounds.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-light" style="background:#12806F"><span>#12806F</span></div>
+    <div class="g-swtext"><strong>Settle Teal</strong><code>--kc-teal</code><p>Labels and accents on Paper only. Never on Vault.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-light" style="background:#56618A"><span>#56618A</span></div>
+    <div class="g-swtext"><strong>Slate</strong><code>--kc-slate</code><p>Secondary text on Paper.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-dark" style="background:#AFB8D6"><span>#AFB8D6</span></div>
+    <div class="g-swtext"><strong>Mist</strong><code>--kc-mist</code><p>Secondary text on Vault.</p></div></div>
+    <div class="g-sw"><div class="g-chip ink-light" style="background:#D9583F"><span>#D9583F</span></div>
+    <div class="g-swtext"><strong>Decline Coral</strong><code>--kc-coral</code><p>Strike-through on the word “declined” and sample tags. Nothing else.</p></div></div>
+  </div>
+  <h3>Colour modes</h3>
+  <div class="g-modes">
+    <div class="g-mode" style="background:#F2F4F8;color:#12204A"><strong>Paper</strong><span>Tips · Steps · Testimonials</span><em style="color:#12806F">Accent: Settle Teal</em></div>
+    <div class="g-mode" style="background:#12204A;color:#fff"><strong>Vault</strong><span>Covers · CTAs · Announcements · Promos</span><em style="color:#E8B44A">Accent: Karma Gold</em></div>
+    <div class="g-mode" style="background:#E8B44A;color:#12204A"><strong>Gold</strong><span>Quotes only</span><em>Accent: White ring</em></div>
+  </div>
+  <p class="g-note">Feed rhythm: never post two Gold posts in a row; alternate Paper and Vault so the grid reads as a checkerboard.</p>
+  <h3>Type scale</h3>
+  <div class="g-table"><table>
+    <thead><tr><th>Role</th><th>Face</th><th class="n">L px</th><th class="n">P px</th><th class="n">S px</th><th class="n">Leading</th><th class="n">Tracking</th><th>Use</th></tr></thead>
+    <tbody><tr><td class="">Display</td><td class="">Bricolage Grotesque 800</td><td class="n">70</td><td class="n">112</td><td class="n">124</td><td class="n">0.96</td><td class="n">−3.5%</td><td class="">One per post. The hook.</td></tr><tr><td class="">H1</td><td class="">Bricolage Grotesque 700</td><td class="n">56</td><td class="n">84</td><td class="n">92</td><td class="n">1.0</td><td class="n">−3%</td><td class="">Headline when Display isn't used</td></tr><tr><td class="">H2</td><td class="">Bricolage Grotesque 700</td><td class="n">36</td><td class="n">54</td><td class="n">58</td><td class="n">1.06</td><td class="n">−2%</td><td class="">Testimonial quote, sub-heads</td></tr><tr><td class="">Body</td><td class="">Figtree 500</td><td class="n">23</td><td class="n">34</td><td class="n">38</td><td class="n">1.38</td><td class="n">0</td><td class="">Max 2–3 lines, 19em measure</td></tr><tr><td class="">Label</td><td class="">IBM Plex Mono 600 caps</td><td class="n">16</td><td class="n">22</td><td class="n">24</td><td class="n">1.2</td><td class="n">+14%</td><td class="">Receipt strip, eyebrows, meta</td></tr><tr><td class="">Micro</td><td class="">Figtree 500</td><td class="n">13</td><td class="n">18</td><td class="n">20</td><td class="n">1.35</td><td class="n">0</td><td class="">Legal & disclaimers only</td></tr></tbody>
+  </table></div>
+  <div class="g-specimen">
+    <p style="font-family:var(--kc-display);font-weight:800;font-size:clamp(40px,7vw,72px);letter-spacing:-.035em;line-height:.95;margin:0">Declined before?</p>
+    <p style="font-family:var(--kc-body);font-weight:500;font-size:20px;margin:0;color:var(--g-sub)">Figtree carries the explanation: plain, calm, readable at phone size.</p>
+    <p style="font-family:var(--kc-mono);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin:0;color:var(--g-accent)">IBM Plex Mono · receipt labels · TIP · 014</p>
+  </div>
+</section>
+<section class="g-sec" id="grid"><div class="g-head"><p class="g-kicker">02 · Grid & sizes</p><h2>Three canvases, one structure</h2></div>
+  <p>Every canvas stacks the same four zones: <strong>receipt strip</strong>, <strong>message</strong>, <strong>legal line</strong> (promotions only), <strong>settlement footer</strong>. Landscape puts the message in two columns; portrait and story stack it.</p>
+  <div class="g-table"><table>
+    <thead><tr><th>Size</th><th class="n">Side margin</th><th class="n">Top / bottom</th><th class="n">Gap unit</th><th>Safe-zone rule</th></tr></thead>
+    <tbody><tr><td class="">L · 1200×630</td><td class="n">56</td><td class="n">40 / 36</td><td class="n">22</td><td class="">Keep text in the left 60%. FB crops nothing, but IG shows it at 1.91:1 small.</td></tr><tr><td class="">P · 1080×1350</td><td class="n">80</td><td class="n">64 / 56</td><td class="n">32</td><td class="">IG grid previews the centre 1080×1080: keep the hook between y 135–1215.</td></tr><tr><td class="">S · 1080×1920</td><td class="n">88</td><td class="n">220 / 300</td><td class="n">36</td><td class="">Top 220 px and bottom 300 px sit under Story UI. Nothing readable there.</td></tr></tbody>
+  </table></div>
+  <div class="g-zones">
+    <figure class="g-zone" style="aspect-ratio:1200/630">
+        <div class="z-top" style="height:6.349206349206349%"></div>
+        <div class="z-bot" style="height:5.714285714285714%"></div>
+        <div class="z-safe" style="top:6.349206349206349%;bottom:5.714285714285714%;left:4.666666666666667%;right:4.666666666666667%"><span>Live area</span></div>
+        <figcaption>L · 1200×630</figcaption></figure><figure class="g-zone" style="aspect-ratio:1080/1350">
+        <div class="z-top" style="height:4.7407407407407405%"></div>
+        <div class="z-bot" style="height:4.148148148148148%"></div>
+        <div class="z-safe" style="top:4.7407407407407405%;bottom:4.148148148148148%;left:7.4074074074074066%;right:7.4074074074074066%"><span>Live area</span></div>
+        <figcaption>P · 1080×1350</figcaption></figure><figure class="g-zone" style="aspect-ratio:1080/1920">
+        <div class="z-top" style="height:11.458333333333332%"></div>
+        <div class="z-bot" style="height:15.625%"></div>
+        <div class="z-safe" style="top:11.458333333333332%;bottom:15.625%;left:8.148148148148149%;right:8.148148148148149%"><span>Live area</span></div>
+        <figcaption>S · 1080×1920</figcaption></figure>
+  </div>
+  <p class="g-note">Spacing uses one gap unit per size (22 / 32 / 36 px). Elements inside the message zone are separated by 1 gap; the strip's dashed rule sits 0.6 gap below its labels; checklists use 0.5 gap.</p>
+</section>
+<section class="g-sec" id="elements"><div class="g-head"><p class="g-kicker">03 · Brand elements</p><h2>Four things on every post</h2></div>
+  <div class="g-els">
+    <div class="g-el"><h3>Receipt strip</h3><p>Top of every canvas. Left: content code in mono (<code>TIP · 014</code>, <code>GUIDE · 007</code>, <code>OFFER · 012</code>). Right: a status chip with a dot. Closed by a dashed rule, like a till receipt. Number posts sequentially per pillar.</p></div>
+    <div class="g-el"><h3>Status chip</h3><p>Pill with a coloured dot: teal on Paper, gold on Vault, Vault on Gold. Two or three words. It tells the scroller what kind of post this is before they read it.</p></div>
+    <div class="g-el"><h3>Karma Ring</h3><p>The gold ring (what goes around comes around), always cropped off the bottom-right corner at 38% of its size. White on Gold posts, 45% opacity on Paper. Dropped on carousel steps and announcements so content can breathe.</p></div>
+    <div class="g-el"><h3>Settlement footer</h3><p>Wordmark left, URL or carousel dots right. Same position on every size. The wordmark here is a type-set placeholder: replace <code>.kc-mark</code> with your logo SVG at the same height (34 / 48 / 52 px).</p></div>
+  </div>
+  <h3>Signature moves</h3>
+  <ul class="g-list">
+    <li><strong>The gold highlight.</strong> One phrase per headline, the promise (“under 1%”, “Get approved”). Marker underline on Paper, gold text on Vault.</li>
+    <li><strong>The Declined strike.</strong> Coral line through “Declined”, followed by the positive word. Use on promotions and covers, at most once a month.</li>
+    <li><strong>Numbers as heroes.</strong> Tip and step numbers set in Display size. A merchant should be able to say “tip 14” in a DM.</li>
+  </ul>
+</section>
+<section class="g-sec" id="pillars"><div class="g-head"><p class="g-kicker">04 · Content pillars</p><h2>What to post, in which layout</h2></div>
+  <div class="g-table"><table>
+    <thead><tr><th>Pillar</th><th>Layout</th><th>Mode</th><th>Cadence</th><th>Job</th></tr></thead>
+    <tbody><tr><td>Tips</td><td>Educational tip</td><td>Paper</td><td>2× / week</td><td>Build trust: show you know underwriting better than anyone.</td></tr><tr><td>Tutorials</td><td>Carousel (cover → steps → CTA)</td><td>Vault + Paper</td><td>1× / week</td><td>Saves and shares. The highest-value post type.</td></tr><tr><td>Quotes</td><td>Quote</td><td>Gold</td><td>1× / week</td><td>Point of view. Reassure merchants who've been declined.</td></tr><tr><td>Promotions</td><td>Promotion, Announcement</td><td>Vault</td><td>2× / month</td><td>Drive applications. Always carries the legal line.</td></tr><tr><td>Social proof</td><td>Testimonial</td><td>Paper</td><td>2× / month</td><td>Real merchants, real permission.</td></tr></tbody>
+  </table></div>
+  <p class="g-note">Voice for high-risk merchants: reassuring and expert. Name the fear (“declined”, “frozen funds”, “reserve”), then the fix. No hype, no guarantees, no exclamation marks.</p>
+</section>
+<section class="g-sec" id="templates"><div class="g-head"><p class="g-kicker">05 · Templates</p><h2>Eight layouts × three sizes</h2></div>
+  <article class="g-tpl" id="tpl-tip">
+    <div class="g-tplhead"><h3>Educational tip</h3><p class="g-tags"><span>Tips</span><span>Paper</span></p></div>
+    <p class="g-when">Weekly how-to nuggets: chargebacks, descriptors, PCI, reserves, documentation.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-tip mode-paper" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Tip · 014</span><span class="kc-chip"><i class="kc-dot"></i>Merchant tip</span></header>
+      <div class="kc-body">
+        <div class="kc-num">014</div>
+        <p class="kc-eyebrow">Chargeback health</p>
+        <h2 class="kc-h1">Keep chargebacks <span class="kc-hl">under 1%</span> of monthly sales.</h2>
+        <p class="kc-text">Processors start watching accounts that get close. Clear billing descriptors and fast refunds keep you well below the line.</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>Save this for later ↓</span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-tip mode-paper" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Tip · 014</span><span class="kc-chip"><i class="kc-dot"></i>Merchant tip</span></header>
+      <div class="kc-body">
+        <div class="kc-num">014</div>
+        <p class="kc-eyebrow">Chargeback health</p>
+        <h2 class="kc-h1">Keep chargebacks <span class="kc-hl">under 1%</span> of monthly sales.</h2>
+        <p class="kc-text">Processors start watching accounts that get close. Clear billing descriptors and fast refunds keep you well below the line.</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>Save this for later ↓</span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-tip mode-paper" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Tip · 014</span><span class="kc-chip"><i class="kc-dot"></i>Merchant tip</span></header>
+      <div class="kc-body">
+        <div class="kc-num">014</div>
+        <p class="kc-eyebrow">Chargeback health</p>
+        <h2 class="kc-h1">Keep chargebacks <span class="kc-hl">under 1%</span> of monthly sales.</h2>
+        <p class="kc-text">Processors start watching accounts that get close. Clear billing descriptors and fast refunds keep you well below the line.</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>Save this for later ↓</span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Receipt strip: TIP · ### + “Merchant tip” chip</li><li>Tip number in Display size, Settle Teal</li><li>Eyebrow (topic, mono caps)</li><li>H1 headline with one gold highlight</li><li>Body: one or two sentences</li><li>Footer: “Save this for later ↓”</li></ol></div>
+      <div><h4>Copy limits</h4><p>Headline ≤ 55 characters · body ≤ 140 · one highlight per headline</p><h4>Image placement</h4><p>No photo. The number is the visual.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-cover">
+    <div class="g-tplhead"><h3>Carousel cover</h3><p class="g-tags"><span>Tutorials</span><span>Vault</span></p></div>
+    <p class="g-when">Opens every multi-slide tutorial or checklist. Always followed by step slides and a closing CTA.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-cover mode-vault" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>4 steps</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">High-risk approval guide</p>
+        <h2 class="kc-display">Declined before? <span class="kc-hl">Get approved</span> the right way.</h2>
+        <p class="kc-text">Four things underwriters check first, and how to have them ready.</p>
+        <span class="kc-swipe">Swipe to start →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-cover mode-vault" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>4 steps</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">High-risk approval guide</p>
+        <h2 class="kc-display">Declined before? <span class="kc-hl">Get approved</span> the right way.</h2>
+        <p class="kc-text">Four things underwriters check first, and how to have them ready.</p>
+        <span class="kc-swipe">Swipe to start →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-cover mode-vault" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>4 steps</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">High-risk approval guide</p>
+        <h2 class="kc-display">Declined before? <span class="kc-hl">Get approved</span> the right way.</h2>
+        <p class="kc-text">Four things underwriters check first, and how to have them ready.</p>
+        <span class="kc-swipe">Swipe to start →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip: GUIDE · ### + “N steps” chip</li><li>Content bottom-aligned (thumb-stopping weight sits low)</li><li>Eyebrow → Display headline (gold highlight on the promise)</li><li>One-line body, then “Swipe to start →”</li><li>Progress dots in footer: first dot is the long gold pill</li></ol></div>
+      <div><h4>Copy limits</h4><p>Headline ≤ 45 characters · 3–8 steps · 1080×1350 for IG carousels</p><h4>Image placement</h4><p>No photo. Optional: swap the ring for a product screenshot cropped at the same corner.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-step">
+    <div class="g-tplhead"><h3>Carousel step</h3><p class="g-tags"><span>Tutorials</span><span>Paper</span></p></div>
+    <p class="g-when">One idea per slide. Repeat the layout; only the number, headline, body and checklist change.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-step mode-paper" data-canvas-width="1200" data-canvas-height="630">
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Step 1 of 4</span></header>
+      <div class="kc-body">
+        <div class="kc-left">
+          <div class="kc-stepno"><strong>01</strong>Step</div>
+          <h2 class="kc-h1">Gather your processing history.</h2>
+          <p class="kc-text">Underwriters want proof of stable volume and low disputes.</p>
+        </div>
+        <ul class="kc-check"><li><b>✓</b>3–6 months of statements</li><li><b>✓</b>Chargeback & refund ratios</li><li><b>✓</b>Current processor's name</li></ul>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-step mode-paper" data-canvas-width="1080" data-canvas-height="1350">
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Step 1 of 4</span></header>
+      <div class="kc-body">
+        <div class="kc-left">
+          <div class="kc-stepno"><strong>01</strong>Step</div>
+          <h2 class="kc-h1">Gather your processing history.</h2>
+          <p class="kc-text">Underwriters want proof of stable volume and low disputes.</p>
+        </div>
+        <ul class="kc-check"><li><b>✓</b>3–6 months of statements</li><li><b>✓</b>Chargeback & refund ratios</li><li><b>✓</b>Current processor's name</li></ul>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-step mode-paper" data-canvas-width="1080" data-canvas-height="1920">
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Step 1 of 4</span></header>
+      <div class="kc-body">
+        <div class="kc-left">
+          <div class="kc-stepno"><strong>01</strong>Step</div>
+          <h2 class="kc-h1">Gather your processing history.</h2>
+          <p class="kc-text">Underwriters want proof of stable volume and low disputes.</p>
+        </div>
+        <ul class="kc-check"><li><b>✓</b>3–6 months of statements</li><li><b>✓</b>Chargeback & refund ratios</li><li><b>✓</b>Current processor's name</li></ul>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span></span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip chip: “Step N of N”</li><li>Big step number (Display, Vault) + mono “STEP” label</li><li>H1 action headline (starts with a verb)</li><li>Body: why it matters</li><li>Checklist: up to 4 ✓ items</li><li>Dots: current step highlighted in teal</li></ol></div>
+      <div><h4>Copy limits</h4><p>Headline ≤ 40 characters · ≤ 4 checklist items, ≤ 32 characters each · no Karma Ring (keeps slides calm)</p><h4>Image placement</h4><p>None. Use a screenshot only when the step is about a form or dashboard.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-cta">
+    <div class="g-tplhead"><h3>Carousel closing CTA</h3><p class="g-tags"><span>Tutorials</span><span>Vault</span></p></div>
+    <p class="g-when">Last slide of every carousel. The only carousel slide with a button.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-cta mode-vault" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Next step</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">Ready when you are</p>
+        <h2 class="kc-display">Open to <span class="kc-hl">all industries.</span></h2>
+        <p class="kc-text">Send your application and hear back in 24–48 hours.</p>
+        <span class="kc-cta">Apply at karmacardpayments.com →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class="on"></i></span></span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-cta mode-vault" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Next step</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">Ready when you are</p>
+        <h2 class="kc-display">Open to <span class="kc-hl">all industries.</span></h2>
+        <p class="kc-text">Send your application and hear back in 24–48 hours.</p>
+        <span class="kc-cta">Apply at karmacardpayments.com →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class="on"></i></span></span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-cta mode-vault" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Guide · 007</span><span class="kc-chip"><i class="kc-dot"></i>Next step</span></header>
+      <div class="kc-body">
+        <p class="kc-eyebrow">Ready when you are</p>
+        <h2 class="kc-display">Open to <span class="kc-hl">all industries.</span></h2>
+        <p class="kc-text">Send your application and hear back in 24–48 hours.</p>
+        <span class="kc-cta">Apply at karmacardpayments.com →</span>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span><span class="kc-dots"><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class="on"></i></span></span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip chip: “Next step”</li><li>Eyebrow → Display headline</li><li>Body with the response-time promise</li><li>Gold pill CTA with URL</li><li>Dots: last dot active</li></ol></div>
+      <div><h4>Copy limits</h4><p>One CTA only · button text ≤ 32 characters</p><h4>Image placement</h4><p>None.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-quote">
+    <div class="g-tplhead"><h3>Quote</h3><p class="g-tags"><span>Quotes</span><span>Gold</span></p></div>
+    <p class="g-when">Brand point of view, founder notes, industry insight. Max one in every six posts so gold stays special.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-quote mode-gold" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Note · 021</span><span class="kc-chip"><i class="kc-dot"></i>From our team</span></header>
+      <div class="kc-body">
+        <div class="kc-qmark" aria-hidden="true">“</div>
+        <blockquote><p class="kc-h1">A decline elsewhere isn’t the end of the conversation. It’s where ours starts.</p></blockquote>
+        <p class="kc-attr"><i class="kc-rule"></i>The Karma Card team</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-quote mode-gold" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Note · 021</span><span class="kc-chip"><i class="kc-dot"></i>From our team</span></header>
+      <div class="kc-body">
+        <div class="kc-qmark" aria-hidden="true">“</div>
+        <blockquote><p class="kc-h1">A decline elsewhere isn’t the end of the conversation. It’s where ours starts.</p></blockquote>
+        <p class="kc-attr"><i class="kc-rule"></i>The Karma Card team</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-quote mode-gold" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Note · 021</span><span class="kc-chip"><i class="kc-dot"></i>From our team</span></header>
+      <div class="kc-body">
+        <div class="kc-qmark" aria-hidden="true">“</div>
+        <blockquote><p class="kc-h1">A decline elsewhere isn’t the end of the conversation. It’s where ours starts.</p></blockquote>
+        <p class="kc-attr"><i class="kc-rule"></i>The Karma Card team</p>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip: NOTE · ### + chip (“From our team”)</li><li>Oversized white quote mark</li><li>H1 quote text, Vault</li><li>Attribution with rule, mono caps</li><li>White Karma Ring</li></ol></div>
+      <div><h4>Copy limits</h4><p>Quote ≤ 90 characters · attribute only real people who approved the wording, otherwise “The Karma Card team”</p><h4>Image placement</h4><p>No photo. Optional 1:1 headshot can replace the quote mark.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-announce">
+    <div class="g-tplhead"><h3>Announcement</h3><p class="g-tags"><span>Promotions / news</span><span>Vault</span></p></div>
+    <p class="g-when">New industry pages, new payment methods, office hours, events, partner news.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-announce mode-vault" data-canvas-width="1200" data-canvas-height="630">
+      <header class="kc-strip"><span class="kc-id">News · 003</span><span class="kc-chip"><i class="kc-dot"></i>Now onboarding</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">New industry page</p>
+          <h2 class="kc-display">Telemedicine merchant accounts are open.</h2>
+          <p class="kc-text">Card, ACH and online checkout under one account built for healthcare risk profiles.</p>
+          <div class="kc-meta"><span>Card + ACH</span><span>Online checkout</span><span>24–48 hr response</span></div>
+        </div>
+        <div class="kc-photo"><span>Photo · provider or clinic · duotone</span></div>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-announce mode-vault" data-canvas-width="1080" data-canvas-height="1350">
+      <header class="kc-strip"><span class="kc-id">News · 003</span><span class="kc-chip"><i class="kc-dot"></i>Now onboarding</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">New industry page</p>
+          <h2 class="kc-display">Telemedicine merchant accounts are open.</h2>
+          <p class="kc-text">Card, ACH and online checkout under one account built for healthcare risk profiles.</p>
+          <div class="kc-meta"><span>Card + ACH</span><span>Online checkout</span><span>24–48 hr response</span></div>
+        </div>
+        <div class="kc-photo"><span>Photo · provider or clinic · duotone</span></div>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-announce mode-vault" data-canvas-width="1080" data-canvas-height="1920">
+      <header class="kc-strip"><span class="kc-id">News · 003</span><span class="kc-chip"><i class="kc-dot"></i>Now onboarding</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">New industry page</p>
+          <h2 class="kc-display">Telemedicine merchant accounts are open.</h2>
+          <p class="kc-text">Card, ACH and online checkout under one account built for healthcare risk profiles.</p>
+          <div class="kc-meta"><span>Card + ACH</span><span>Online checkout</span><span>24–48 hr response</span></div>
+        </div>
+        <div class="kc-photo"><span>Photo · provider or clinic · duotone</span></div>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip chip: status (“Now onboarding”, “New”, “Event”)</li><li>Eyebrow → Display headline</li><li>Body: what it means for the merchant</li><li>Meta row: up to 3 gold facts</li><li>Photo panel (right on L, below on P/S)</li></ol></div>
+      <div><h4>Copy limits</h4><p>Headline ≤ 50 characters · 3 meta facts, ≤ 20 characters each</p><h4>Image placement</h4><p>Photo slot: L 5:6 right half · P full width, flexible height · S 560 px tall. Duotone Vault overlay 20–35%.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-testimonial">
+    <div class="g-tplhead"><h3>Testimonial</h3><p class="g-tags"><span>Social proof</span><span>Paper</span></p></div>
+    <p class="g-when">Merchant reviews and case results, only with written permission from the merchant.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-testimonial mode-paper" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Review · 009</span><span class="kc-chip"><i class="kc-dot"></i>Merchant story</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <span class="kc-tag">Sample · replace with a real, approved review</span>
+          <div class="kc-stars" aria-label="5 out of 5">★★★★★</div>
+          <p class="kc-h2">“Two processors turned us down. Karma Card had us taking payments again inside a week.”</p>
+          
+        </div>
+        <div class="kc-side"><div class="kc-who" style="flex-direction:column;align-items:flex-start"><div class="kc-photo round" style="width:100%"><span>Photo<br>1:1</span></div><div><strong>Merchant first name + initial</strong><span>Industry · City, State</span></div></div></div>
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-testimonial mode-paper" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Review · 009</span><span class="kc-chip"><i class="kc-dot"></i>Merchant story</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <span class="kc-tag">Sample · replace with a real, approved review</span>
+          <div class="kc-stars" aria-label="5 out of 5">★★★★★</div>
+          <p class="kc-h2">“Two processors turned us down. Karma Card had us taking payments again inside a week.”</p>
+          <div class="kc-who"><div class="kc-photo round"><span>1:1</span></div><div><strong>Merchant first name + initial</strong><span>Industry · City, State</span></div></div>
+        </div>
+        
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-testimonial mode-paper" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Review · 009</span><span class="kc-chip"><i class="kc-dot"></i>Merchant story</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <span class="kc-tag">Sample · replace with a real, approved review</span>
+          <div class="kc-stars" aria-label="5 out of 5">★★★★★</div>
+          <p class="kc-h2">“Two processors turned us down. Karma Card had us taking payments again inside a week.”</p>
+          <div class="kc-who"><div class="kc-photo round"><span>1:1</span></div><div><strong>Merchant first name + initial</strong><span>Industry · City, State</span></div></div>
+        </div>
+        
+      </div>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip: REVIEW · ### + “Merchant story” chip</li><li>Five gold stars only if the review gave five stars</li><li>H2 quote in quotation marks</li><li>Round 1:1 photo + name + industry/city</li></ol></div>
+      <div><h4>Copy limits</h4><p>Quote ≤ 120 characters · first name + last initial · never invent or edit a review's meaning</p><h4>Image placement</h4><p>Round 1:1 headshot or storefront. Real customer photos only, no stock faces.</p></div>
+    </div>
+  </article>
+  <article class="g-tpl" id="tpl-promo">
+    <div class="g-tplhead"><h3>Promotion</h3><p class="g-tags"><span>Promotions</span><span>Vault</span></p></div>
+    <p class="g-when">Fee offers, switch-over campaigns, seasonal pushes.</p>
+    <div class="g-frames"><figure class="g-frame g-L"><div class="g-canvas"><section class="kc-post slide size-L t-promo mode-vault" data-canvas-width="1200" data-canvas-height="630"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Offer · 012</span><span class="kc-chip"><i class="kc-dot"></i>Limited time</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">Switch processors</p>
+          <h2 class="kc-display">High-risk? <span class="kc-strike">Declined<i class="kc-strike-line"></i></span> <span class="kc-hl">Covered.</span></h2>
+          <span class="kc-cta">Start your application →</span>
+        </div>
+        <div class="kc-offer">
+          <span class="kc-big">$0 setup</span>
+          <p class="kc-micro">No setup fees on new high-risk merchant accounts.</p>
+        </div>
+      </div>
+      <p class="kc-legal">Approval subject to underwriting. Rates and terms vary by industry and processing history.</p>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>L · 1200×630</figcaption></figure><figure class="g-frame g-P"><div class="g-canvas"><section class="kc-post slide size-P t-promo mode-vault" data-canvas-width="1080" data-canvas-height="1350"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Offer · 012</span><span class="kc-chip"><i class="kc-dot"></i>Limited time</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">Switch processors</p>
+          <h2 class="kc-display">High-risk? <span class="kc-strike">Declined<i class="kc-strike-line"></i></span> <span class="kc-hl">Covered.</span></h2>
+          <span class="kc-cta">Start your application →</span>
+        </div>
+        <div class="kc-offer">
+          <span class="kc-big">$0 setup</span>
+          <p class="kc-micro">No setup fees on new high-risk merchant accounts.</p>
+        </div>
+      </div>
+      <p class="kc-legal">Approval subject to underwriting. Rates and terms vary by industry and processing history.</p>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>P · 1080×1350</figcaption></figure><figure class="g-frame g-S"><div class="g-canvas"><section class="kc-post slide size-S t-promo mode-vault" data-canvas-width="1080" data-canvas-height="1920"><div class="kc-ring" aria-hidden="true"></div><div class="kc-ring-in" aria-hidden="true"></div>
+      <header class="kc-strip"><span class="kc-id">Offer · 012</span><span class="kc-chip"><i class="kc-dot"></i>Limited time</span></header>
+      <div class="kc-body">
+        <div class="kc-copy">
+          <p class="kc-eyebrow">Switch processors</p>
+          <h2 class="kc-display">High-risk? <span class="kc-strike">Declined<i class="kc-strike-line"></i></span> <span class="kc-hl">Covered.</span></h2>
+          <span class="kc-cta">Start your application →</span>
+        </div>
+        <div class="kc-offer">
+          <span class="kc-big">$0 setup</span>
+          <p class="kc-micro">No setup fees on new high-risk merchant accounts.</p>
+        </div>
+      </div>
+      <p class="kc-legal">Approval subject to underwriting. Rates and terms vary by industry and processing history.</p>
+      <footer class="kc-foot"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>karmacardpayments.com</span></footer></section></div><figcaption>S · 1080×1920</figcaption></figure></div>
+    <div class="g-spec">
+      <div><h4>Text hierarchy</h4><ol><li>Strip chip: urgency (“Limited time”, “This month”)</li><li>Eyebrow → Display headline (the Declined strike is the signature move)</li><li>Gold CTA pill</li><li>Offer coupon: dashed gold border, big gold figure</li><li>Legal line above footer (required)</li></ol></div>
+      <div><h4>Copy limits</h4><p>Offer figure ≤ 10 characters · legal line always present · end dates stated in caption</p><h4>Image placement</h4><p>No photo. The coupon is the visual.</p></div>
+    </div>
+  </article></section>
+<section class="g-sec" id="imagery"><div class="g-head"><p class="g-kicker">06 · Imagery</p><h2>Photo direction</h2></div>
+  <div class="g-dodont">
+    <div><h3>Use</h3><ul class="g-list"><li>Real merchants at work: counters, warehouses, studios, clinics.</li><li>Card terminals and checkout screens in context.</li><li>Duotone treatment: photo at 100%, Vault multiply layer at 20–35%.</li><li>Faces looking toward the text side of the canvas.</li></ul></div>
+    <div><h3>Avoid</h3><ul class="g-list"><li>Handshakes, piles of cash, stock “business people”.</li><li>Product imagery for restricted categories (firearms, CBD, adult, gambling). Meta may limit or reject the post.</li><li>Text baked into photos. All text stays live in the template.</li><li>Logos of card networks unless you follow their brand rules.</li></ul></div>
+  </div>
+</section>
+<section class="g-sec" id="compliance"><div class="g-head"><p class="g-kicker">07 · Compliance</p><h2>Rules for a high-risk processor</h2></div>
+  <ul class="g-list">
+    <li><strong>No guaranteed approvals.</strong> Say “open to all industries” or “apply and hear back in 24–48 hours”, never “guaranteed approval”.</li>
+    <li><strong>Legal line on every offer.</strong> “Approval subject to underwriting. Rates and terms vary by industry and processing history.” Add end dates in the caption.</li>
+    <li><strong>Check every claim against the website.</strong> “No setup fees” and approval-rate figures must match current terms before posting.</li>
+    <li><strong>Testimonials need written permission</strong> and must be the merchant's own words. The sample tag on the template is there to stop a placeholder going live.</li>
+    <li><strong>Boosted posts</strong> about financial services fall under Meta's special ad categories in some regions, which limits targeting. Plan audiences with that in mind.</li>
+  </ul>
+</section>
+<section class="g-sec" id="checklist"><div class="g-head"><p class="g-kicker">08 · Production</p><h2>Pre-post checklist</h2></div>
+  <ol class="g-check">
+    <li>Right layout for the pillar, right colour mode, and it doesn't repeat the previous post's mode.</li>
+    <li>Receipt code updated and sequential (<code>TIP · 015</code> follows <code>014</code>).</li>
+    <li>One highlight in the headline. Copy within the character limits.</li>
+    <li>Nothing readable in Story safe zones (top 220 px, bottom 300 px).</li>
+    <li>Legal line present on promotions; sample tag removed from real testimonials.</li>
+    <li>Export PNG at native size: 1200×630, 1080×1350, 1080×1920.</li>
+    <li>Caption: hook in the first 125 characters, a CTA, the URL, 3–5 hashtags at most.</li>
+  </ol>
+  <p class="g-note">Files: <code>exports/png/</code> holds the rendered samples, <code>exports/express/</code> one Adobe Express import file per size, and <code>src/templates.mjs</code> the sample copy you edit to make new posts. Run <code>npm run build</code> to regenerate everything.</p>
+</section>
+</main>
+<footer class="g-foot g-wrap"><span class="kc-mark"><i></i>Karma<b>Card Payments</b></span><span>Social design kit · karmacardpayments.com</span></footer></body></html>
