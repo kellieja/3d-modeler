@@ -44,6 +44,14 @@ social-kit/
     └── KarmaCard-Social-Design-Kit.pdf
 ```
 
+## Adobe Express documents
+
+Each document holds all eight layouts for one size. Duplicate a page, then edit the text in place.
+
+- [Facebook landscape · 1200×630](https://new.express.adobe.com/id/urn:aaid:sc:VA6C2:ce8dd355-8e8b-4138-a4a6-af574d7dba72)
+- [Portrait feed + carousel · 1080×1350](https://new.express.adobe.com/id/urn:aaid:sc:VA6C2:fe2f6bc2-3e85-4589-bf79-cf60079a7700)
+- [Story · 1080×1920](https://new.express.adobe.com/id/urn:aaid:sc:VA6C2:0b369ac5-f3e1-461a-b2fc-395bc4b5c42b)
+
 ## Making a new post
 
 1. Copy an entry in `SAMPLES` in `src/templates.mjs` and change the copy. Stay inside the character limits listed in the style guide.
