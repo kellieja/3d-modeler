@@ -70,10 +70,28 @@
             waveTargetSpring: 0.1 // How fast distortion returns to flat
         };
 
-        // Source images: distinct seeded Picsum photos, requested at 2x card size for high-DPI screens
-        const imageSrcs = [1, 2, 3, 4, 5].map(
-            n => `https://picsum.photos/seed/reel-flux-${n}/${CONFIG.itemWidth * 2}/${CONFIG.itemHeight * 2}`
-        );
+        // Source images: built-in gradient landscapes (inline SVG, 2x card size for high-DPI screens),
+        // so the reel works offline and on any host without external image requests
+        const palettes = [
+            ['#ff6b6b', '#5f27cd'],
+            ['#1dd1a1', '#0abde3'],
+            ['#feca57', '#ff6b6b'],
+            ['#48dbfb', '#341f97'],
+            ['#ff9ff3', '#f368e0']
+        ];
+        const imageSrcs = palettes.map(([from, to]) => {
+            const w = CONFIG.itemWidth * 2;
+            const h = CONFIG.itemHeight * 2;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 480 640">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/>
+                </linearGradient></defs>
+                <rect width="480" height="640" fill="url(#g)"/>
+                <circle cx="340" cy="170" r="70" fill="#fff" opacity=".35"/>
+                <path d="M0 520 L160 360 L280 470 L360 400 L480 520 L480 640 L0 640Z" fill="#000" opacity=".25"/>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
 
         let images = [];
         let imagesSettled = 0;
