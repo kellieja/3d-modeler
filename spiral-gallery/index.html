@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A 3D spiral gallery of cards you travel by dragging, scrolling or using the arrow keys.">
+    <meta name="theme-color" content="#0b0b0b">
     <title>3D Spiral Flux Gallery</title>
     <style>
         * {
@@ -39,6 +41,21 @@
             align-items: center;
             padding: 0 24px;
             pointer-events: none;
+        }
+        .hud-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .back {
+            pointer-events: auto;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .back:hover, .back:focus-visible {
+            color: #00e1ff;
         }
         .counter {
             font-size: 13px;
@@ -96,6 +113,8 @@
         .lightbox.open {
             opacity: 1;
             visibility: visible;
+            /* Become visible instantly on open so the Close button can take focus right away */
+            transition: opacity 0.25s ease, visibility 0s;
         }
         .lightbox img {
             max-width: min(90vw, 1080px);
@@ -126,14 +145,17 @@
 </head>
 <body>
 
-    <canvas id="spiralCanvas"></canvas>
+    <canvas id="spiralCanvas" aria-label="3D spiral gallery. Use the arrow keys to move between cards and Enter to open one." role="img"></canvas>
     <div class="hud">
-        <div class="counter" id="counter"></div>
+        <div class="hud-left">
+            <a class="back" href="../">&larr; All replicas</a>
+            <div class="counter" id="counter" aria-live="polite"></div>
+        </div>
         <button class="toggle" id="autoToggle" type="button"></button>
     </div>
     <div class="instructions">Drag or scroll to travel the spiral · Arrow keys step · Click a card to open it</div>
 
-    <figure class="lightbox" id="lightbox" aria-hidden="true">
+    <figure class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightboxCaption" aria-hidden="true">
         <button class="toggle close" id="lightboxClose" type="button">Close</button>
         <img id="lightboxImg" alt="">
         <figcaption id="lightboxCaption"></figcaption>
@@ -278,6 +300,7 @@
         let wheelSnapTimer = null;
         let drawnItems = [];
         let lightboxOpen = false;
+        let lightboxReturnFocus = null;
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let autoRotate = !reducedMotion;
@@ -432,6 +455,7 @@
             lightbox.classList.add('open');
             lightbox.setAttribute('aria-hidden', 'false');
             lightboxOpen = true;
+            lightboxReturnFocus = document.activeElement;
             document.getElementById('lightboxClose').focus();
         }
 
@@ -439,6 +463,9 @@
             lightbox.classList.remove('open');
             lightbox.setAttribute('aria-hidden', 'true');
             lightboxOpen = false;
+            // Hand focus back to whatever had it before the lightbox opened
+            if (lightboxReturnFocus && lightboxReturnFocus.focus) lightboxReturnFocus.focus();
+            lightboxReturnFocus = null;
             touch();
         }
         lightbox.addEventListener('click', (e) => {
@@ -469,8 +496,12 @@
             requestAnimationFrame(animate);
         }
 
+        let counterIndex = -1;
         function updateCounter() {
             const index = slotIndex(nearestSlot(currentRotation));
+            // Only touch the DOM when the front card changes, so screen readers announce each card once
+            if (index === counterIndex) return;
+            counterIndex = index;
             counterEl.innerHTML = `<strong>${String(index + 1).padStart(2, '0')}</strong> / ${String(totalItems).padStart(2, '0')} · ${titles[index]}`;
         }
 
