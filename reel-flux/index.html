@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="An endless image reel that ripples with your drag and scroll speed.">
+    <meta name="theme-color" content="#0d0d0d">
+    <title>Reel Flux</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0d0d0d;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            cursor: grab;
+            position: relative;
+            touch-action: pan-y; /* Let vertical page gestures through, capture horizontal drags */
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        #canvas-container:focus-visible {
+            outline: 2px solid rgba(0,225,255,0.6);
+            outline-offset: -2px;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
+        }
+        .back {
+            position: fixed;
+            top: 20px;
+            left: 24px;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .back:hover, .back:focus-visible {
+            color: #00e1ff;
+        }
+        @media (max-width: 600px) {
+            .back { left: 16px; }
+            .instructions { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <a class="back" href="../">&larr; All replicas</a>
+
+    <div id="canvas-container" tabindex="0" role="region" aria-label="Image reel. Use the left and right arrow keys to scroll.">
+        <canvas id="fluxCanvas" aria-hidden="true"></canvas>
+        <div class="instructions">Drag, scroll or use the arrow keys to ripple the reel</div>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const canvas = document.getElementById('fluxCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration Parameters
+        const CONFIG = {
+            itemWidth: 240,
+            itemHeight: 320,
+            gap: 30,
+            friction: 0.92,
+            dragVelocityScale: 0.8,
+            waveFrequency: 0.005, // How tight the waves are across the screen
+            maxWaveAmplitude: 80, // Maximum vertical distortion peak
+            waveTargetSpring: 0.1, // How fast distortion returns to flat
+            keyNudge: 18 // Velocity added per arrow-key press
+        };
+
+        // Respect the OS "reduce motion" setting: the reel still scrolls, but without the ripple
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reducedMotion) CONFIG.maxWaveAmplitude = 0;
+
+        // Source images: built-in gradient landscapes (inline SVG, 2x card size for high-DPI screens),
+        // so the reel works offline and on any host without external image requests
+        const palettes = [
+            ['#ff6b6b', '#5f27cd'],
+            ['#1dd1a1', '#0abde3'],
+            ['#feca57', '#ff6b6b'],
+            ['#48dbfb', '#341f97'],
+            ['#ff9ff3', '#f368e0']
+        ];
+        const imageSrcs = palettes.map(([from, to]) => {
+            const w = CONFIG.itemWidth * 2;
+            const h = CONFIG.itemHeight * 2;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 480 640">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/>
+                </linearGradient></defs>
+                <rect width="480" height="640" fill="url(#g)"/>
+                <circle cx="340" cy="170" r="70" fill="#fff" opacity=".35"/>
+                <path d="M0 520 L160 360 L280 470 L360 400 L480 520 L480 640 L0 640Z" fill="#000" opacity=".25"/>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
+
+        let images = [];
+        let imagesSettled = 0;
+
+        // Load Images. Start once every request has finished, keeping only the ones that loaded,
+        // so a single failed image can't stall the whole reel.
+        imageSrcs.forEach(src => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            const settle = () => {
+                imagesSettled++;
+                if (imagesSettled === imageSrcs.length) {
+                    images = images.filter(i => i.complete && i.naturalWidth > 0);
+                    if (images.length) init();
+                }
+            };
+            img.onload = settle;
+            img.onerror = settle;
+            img.src = src;
+            images.push(img);
+        });
+
+        // State Variables
+        let width, height;
+        let scrollX = 0;
+        let velocity = 0;
+        let targetWaveAmplitude = 0;
+        let currentWaveAmplitude = 0;
+        let totalLoopWidth = 0;
+
+        // Interaction Variables
+        let isDragging = false;
+        let startX = 0;
+
+        function resize() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            // Handle high-DPI displays cleanly
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            // Set (rather than multiply) the transform so repeated resizes don't compound the scale
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+
+            totalLoopWidth = images.length * (CONFIG.itemWidth + CONFIG.gap);
+
+            // Setup Interactions (pointer events cover mouse, touch and pen)
+            container.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - startX;
+                startX = e.clientX;
+                velocity += deltaX * CONFIG.dragVelocityScale;
+            });
+
+            window.addEventListener('pointerup', () => isDragging = false);
+            window.addEventListener('pointercancel', () => isDragging = false);
+
+            // Handle trackpad/mousewheel horizontal scroll
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                // Capture both explicit deltaX or vertical fallback
+                const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                velocity -= delta * 0.5;
+            }, { passive: false });
+
+            // Keyboard: arrow keys push the reel while it has focus
+            container.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    velocity += CONFIG.keyNudge;
+                } else if (e.key === 'ArrowRight') {
+                    velocity -= CONFIG.keyNudge;
+                } else {
+                    return;
+                }
+                e.preventDefault();
+            });
+
+            // Begin Main Loop
+            requestAnimationFrame(update);
+        }
+
+        function update(time) {
+            // Apply physics: Move scroll position by current velocity
+            scrollX += velocity;
+            velocity *= CONFIG.friction;
+
+            // Generate distortion peak based purely on movement speed
+            targetWaveAmplitude = Math.min(Math.abs(velocity) * 2.5, CONFIG.maxWaveAmplitude);
+            // Smoothly interpolate the wave distortion intensity
+            currentWaveAmplitude += (targetWaveAmplitude - currentWaveAmplitude) * CONFIG.waveTargetSpring;
+
+            // Clear Screen
+            ctx.clearRect(0, 0, width, height);
+
+            // Endless Wrapper Logic
+            // Keep scrollX within one loop length. Shifting by exactly totalLoopWidth
+            // leaves every card's image unchanged, so the wrap is invisible.
+            while (scrollX > 0) scrollX -= totalLoopWidth;
+            while (scrollX <= -totalLoopWidth) scrollX += totalLoopWidth;
+
+            // Draw Reel Items
+            const itemStride = CONFIG.itemWidth + CONFIG.gap;
+            // Slot k sits at scrollX + k * itemStride and always shows images[k mod n].
+            // Start one slot left of the viewport and draw until we pass the right edge.
+            const firstSlot = Math.floor(-scrollX / itemStride) - 1;
+            const slotCount = Math.ceil(width / itemStride) + 3;
+            const phase = time * 0.002; // Wave phase, computed once per frame
+            const y = (height - CONFIG.itemHeight) / 2;
+
+            for (let k = firstSlot; k < firstSlot + slotCount; k++) {
+                const x = scrollX + k * itemStride;
+                const img = images[((k % images.length) + images.length) % images.length];
+                drawDeformedImage(img, x, y, CONFIG.itemWidth, CONFIG.itemHeight, phase);
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        /**
+         * Slices a single item vertically to apply localized sine displacement values
+         */
+        function drawDeformedImage(img, x, y, w, h, phase) {
+            // Optimization: Skip rendering entirely if the asset card is fully outside the viewport frame
+            if (x + w < 0 || x > width) return;
+
+            const sliceWidth = 2; // Higher value = better performance, lower value = smoother curve resolution
+            const imgW = img.naturalWidth;
+            const imgH = img.naturalHeight;
+
+            for (let i = 0; i < w; i += sliceWidth) {
+                const screenX = x + i;
+
+                // Do not parse pixels that fall strictly outside viewport canvas limits
+                if (screenX + sliceWidth < 0 || screenX > width) continue;
+
+                // Calculate a dynamic sine offset directly bound to the pixel's X location on screen
+                const sineModifier = Math.sin(screenX * CONFIG.waveFrequency + phase);
+                const offsetY = sineModifier * currentWaveAmplitude;
+
+                // Calculate slice map ratios for texture sampling
+                const sourceX = (i / w) * imgW;
+                const sourceW = (sliceWidth / w) * imgW;
+
+                ctx.drawImage(
+                    img,
+                    sourceX, 0, sourceW, imgH,             // Source clipping coordinates
+                    screenX, y + offsetY, sliceWidth, h   // Canvas target destination coordinates
+                );
+            }
+        }
+    </script>
+</body>
+</html>
