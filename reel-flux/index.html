@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="An endless image reel that ripples with your drag and scroll speed.">
+    <meta name="description" content="An endless image reel that drifts at your chosen speed and ripples when you drag or scroll it.">
     <meta name="theme-color" content="#0d0d0d">
     <title>Reel Flux</title>
     <style>
@@ -24,7 +24,7 @@
         }
         #canvas-container {
             width: 100%;
-            height: 400px;
+            height: 480px; /* Card height plus room for the strongest bend */
             cursor: grab;
             position: relative;
             touch-action: pan-y; /* Let vertical page gestures through, capture horizontal drags */
@@ -52,6 +52,7 @@
         }
         .back {
             position: fixed;
+            z-index: 1;
             top: 20px;
             left: 24px;
             color: rgba(255,255,255,0.6);
@@ -62,15 +63,95 @@
         .back:hover, .back:focus-visible {
             color: #00e1ff;
         }
+        .controls {
+            position: fixed;
+            z-index: 1; /* Stay above the reel on short screens, where the two overlap */
+            top: 16px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .control-label {
+            padding: 0 8px 0 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .control-group button {
+            background: transparent;
+            border: 1px solid transparent;
+            color: rgba(255,255,255,0.75);
+            font: inherit;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        .control-group button:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .control-group button:focus-visible {
+            outline: none;
+            border-color: rgba(0,225,255,0.6);
+        }
+        .control-group button[aria-pressed="true"] {
+            background: rgba(0,225,255,0.15);
+            border-color: rgba(0,225,255,0.6);
+            color: #fff;
+        }
         @media (max-width: 600px) {
             .back { left: 16px; }
             .instructions { font-size: 12px; }
+            .controls {
+                top: 48px;
+                left: 16px;
+                right: 16px;
+                align-items: stretch;
+            }
+            .control-group button {
+                flex: 1;
+                padding: 6px 4px;
+            }
+            .control-label {
+                width: 52px;
+                padding: 0 4px 0 8px;
+            }
         }
     </style>
 </head>
 <body>
 
     <a class="back" href="../">&larr; All replicas</a>
+
+    <div class="controls">
+        <div class="control-group" role="group" aria-labelledby="speedLabel">
+            <span class="control-label" id="speedLabel">Speed</span>
+            <button type="button" data-speed="off">Off</button>
+            <button type="button" data-speed="slow">Slow</button>
+            <button type="button" data-speed="medium">Medium</button>
+            <button type="button" data-speed="fast">Fast</button>
+        </div>
+        <div class="control-group" role="group" aria-labelledby="bendLabel">
+            <span class="control-label" id="bendLabel">Bend</span>
+            <button type="button" data-bend="flat">Flat</button>
+            <button type="button" data-bend="soft">Soft</button>
+            <button type="button" data-bend="medium">Medium</button>
+            <button type="button" data-bend="strong">Strong</button>
+        </div>
+    </div>
 
     <div id="canvas-container" tabindex="0" role="region" aria-label="Image reel. Use the left and right arrow keys to scroll.">
         <canvas id="fluxCanvas" aria-hidden="true"></canvas>
@@ -90,14 +171,39 @@
             friction: 0.92,
             dragVelocityScale: 0.8,
             waveFrequency: 0.005, // How tight the waves are across the screen
-            maxWaveAmplitude: 80, // Maximum vertical distortion peak
-            waveTargetSpring: 0.1, // How fast distortion returns to flat
+            maxWaveAmplitude: 30, // Maximum vertical distortion peak, set by the Bend buttons
+            waveBuildUp: 20, // Speed (px/frame) at which the bend reaches ~63% of its peak; higher = more gradual
+            waveTargetSpring: 0.06, // How fast distortion follows the target, in both directions
+            autoSpeed: 0.6, // Auto-scroll drift in px/frame, set by the Speed buttons
             keyNudge: 18 // Velocity added per arrow-key press
         };
 
-        // Respect the OS "reduce motion" setting: the reel still scrolls, but without the ripple
+        // Preset values for the control buttons
+        const SPEEDS = { off: 0, slow: 0.6, medium: 1.5, fast: 3 };
+        const BENDS = { flat: 0, soft: 30, medium: 50, strong: 80 };
+
+        // Respect the OS "reduce motion" setting: start still and flat (the buttons can still turn motion on)
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reducedMotion) CONFIG.maxWaveAmplitude = 0;
+        let speedSetting = reducedMotion ? 'off' : 'slow';
+        let bendSetting = reducedMotion ? 'flat' : 'soft';
+
+        function applySettings() {
+            CONFIG.autoSpeed = SPEEDS[speedSetting];
+            CONFIG.maxWaveAmplitude = BENDS[bendSetting];
+            document.querySelectorAll('[data-speed]').forEach(b =>
+                b.setAttribute('aria-pressed', String(b.dataset.speed === speedSetting)));
+            document.querySelectorAll('[data-bend]').forEach(b =>
+                b.setAttribute('aria-pressed', String(b.dataset.bend === bendSetting)));
+        }
+        document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
+            speedSetting = b.dataset.speed;
+            applySettings();
+        }));
+        document.querySelectorAll('[data-bend]').forEach(b => b.addEventListener('click', () => {
+            bendSetting = b.dataset.bend;
+            applySettings();
+        }));
+        applySettings();
 
         // Source images: built-in gradient landscapes (inline SVG, 2x card size for high-DPI screens),
         // so the reel works offline and on any host without external image requests
@@ -213,12 +319,16 @@
         }
 
         function update(time) {
-            // Apply physics: Move scroll position by current velocity
+            // Apply physics: Move scroll position by current velocity.
+            // Friction eases velocity back toward the auto-scroll drift (leftward) rather than to zero.
+            const driftVelocity = -CONFIG.autoSpeed;
             scrollX += velocity;
-            velocity *= CONFIG.friction;
+            velocity = driftVelocity + (velocity - driftVelocity) * CONFIG.friction;
 
-            // Generate distortion peak based purely on movement speed
-            targetWaveAmplitude = Math.min(Math.abs(velocity) * 2.5, CONFIG.maxWaveAmplitude);
+            // Bend comes from movement beyond the steady drift, so auto-scroll alone stays calm.
+            // It eases toward the peak instead of hitting it at once, which keeps fast flicks from bending hard.
+            const excessSpeed = Math.abs(velocity - driftVelocity);
+            targetWaveAmplitude = CONFIG.maxWaveAmplitude * (1 - Math.exp(-excessSpeed / CONFIG.waveBuildUp));
             // Smoothly interpolate the wave distortion intensity
             currentWaveAmplitude += (targetWaveAmplitude - currentWaveAmplitude) * CONFIG.waveTargetSpring;
 
