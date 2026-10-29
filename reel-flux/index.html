@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reel Flux Replica</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #0d0d0d;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 400px;
+            cursor: grab;
+            position: relative;
+            touch-action: pan-y; /* Let vertical page gestures through, capture horizontal drags */
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container">
+        <canvas id="fluxCanvas"></canvas>
+        <div class="instructions">Drag or Scroll horizontally to ripple the reel</div>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const canvas = document.getElementById('fluxCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration Parameters
+        const CONFIG = {
+            itemWidth: 240,
+            itemHeight: 320,
+            gap: 30,
+            friction: 0.92,
+            dragVelocityScale: 0.8,
+            waveFrequency: 0.005, // How tight the waves are across the screen
+            maxWaveAmplitude: 80, // Maximum vertical distortion peak
+            waveTargetSpring: 0.1 // How fast distortion returns to flat
+        };
+
+        // Source images: distinct seeded Picsum photos, requested at 2x card size for high-DPI screens
+        const imageSrcs = [1, 2, 3, 4, 5].map(
+            n => `https://picsum.photos/seed/reel-flux-${n}/${CONFIG.itemWidth * 2}/${CONFIG.itemHeight * 2}`
+        );
+
+        let images = [];
+        let imagesSettled = 0;
+
+        // Load Images. Start once every request has finished, keeping only the ones that loaded,
+        // so a single failed image can't stall the whole reel.
+        imageSrcs.forEach(src => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            const settle = () => {
+                imagesSettled++;
+                if (imagesSettled === imageSrcs.length) {
+                    images = images.filter(i => i.complete && i.naturalWidth > 0);
+                    if (images.length) init();
+                }
+            };
+            img.onload = settle;
+            img.onerror = settle;
+            img.src = src;
+            images.push(img);
+        });
+
+        // State Variables
+        let width, height;
+        let scrollX = 0;
+        let velocity = 0;
+        let targetWaveAmplitude = 0;
+        let currentWaveAmplitude = 0;
+        let totalLoopWidth = 0;
+
+        // Interaction Variables
+        let isDragging = false;
+        let startX = 0;
+
+        function resize() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            // Handle high-DPI displays cleanly
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            // Set (rather than multiply) the transform so repeated resizes don't compound the scale
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+            
+            totalLoopWidth = images.length * (CONFIG.itemWidth + CONFIG.gap);
+
+            // Setup Interactions (pointer events cover mouse, touch and pen)
+            container.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - startX;
+                startX = e.clientX;
+                velocity += deltaX * CONFIG.dragVelocityScale;
+            });
+
+            window.addEventListener('pointerup', () => isDragging = false);
+            window.addEventListener('pointercancel', () => isDragging = false);
+
+            // Handle trackpad/mousewheel horizontal scroll
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                // Capture both explicit deltaX or vertical fallback
+                const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                velocity -= delta * 0.5;
+            }, { passive: false });
+
+            // Begin Main Loop
+            requestAnimationFrame(update);
+        }
+
+        function update(time) {
+            // Apply physics: Move scroll position by current velocity
+            scrollX += velocity;
+            velocity *= CONFIG.friction;
+
+            // Generate distortion peak based purely on movement speed
+            targetWaveAmplitude = Math.min(Math.abs(velocity) * 2.5, CONFIG.maxWaveAmplitude);
+            // Smoothly interpolate the wave distortion intensity
+            currentWaveAmplitude += (targetWaveAmplitude - currentWaveAmplitude) * CONFIG.waveTargetSpring;
+
+            // Clear Screen
+            ctx.clearRect(0, 0, width, height);
+
+            // Endless Wrapper Logic
+            // Keep scrollX within one loop length. Shifting by exactly totalLoopWidth
+            // leaves every card's image unchanged, so the wrap is invisible.
+            while (scrollX > 0) scrollX -= totalLoopWidth;
+            while (scrollX <= -totalLoopWidth) scrollX += totalLoopWidth;
+
+            // Draw Reel Items
+            const itemStride = CONFIG.itemWidth + CONFIG.gap;
+            // Slot k sits at scrollX + k * itemStride and always shows images[k mod n].
+            // Start one slot left of the viewport and draw until we pass the right edge.
+            const firstSlot = Math.floor(-scrollX / itemStride) - 1;
+            const slotCount = Math.ceil(width / itemStride) + 3;
+            const phase = time * 0.002; // Wave phase, computed once per frame
+            const y = (height - CONFIG.itemHeight) / 2;
+
+            for (let k = firstSlot; k < firstSlot + slotCount; k++) {
+                const x = scrollX + k * itemStride;
+                const img = images[((k % images.length) + images.length) % images.length];
+                drawDeformedImage(img, x, y, CONFIG.itemWidth, CONFIG.itemHeight, phase);
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        /**
+         * Slices a single item vertically to apply localized sine displacement values
+         */
+        function drawDeformedImage(img, x, y, w, h, phase) {
+            // Optimization: Skip rendering entirely if the asset card is fully outside the viewport frame
+            if (x + w < 0 || x > width) return;
+
+            const sliceWidth = 2; // Higher value = better performance, lower value = smoother curve resolution
+            const imgW = img.naturalWidth;
+            const imgH = img.naturalHeight;
+            
+            for (let i = 0; i < w; i += sliceWidth) {
+                const screenX = x + i;
+                
+                // Do not parse pixels that fall strictly outside viewport canvas limits
+                if (screenX + sliceWidth < 0 || screenX > width) continue;
+
+                // Calculate a dynamic sine offset directly bound to the pixel's X location on screen
+                const sineModifier = Math.sin(screenX * CONFIG.waveFrequency + phase);
+                const offsetY = sineModifier * currentWaveAmplitude;
+
+                // Calculate slice map ratios for texture sampling
+                const sourceX = (i / w) * imgW;
+                const sourceW = (sliceWidth / w) * imgW;
+
+                ctx.drawImage(
+                    img,
+                    sourceX, 0, sourceW, imgH,             // Source clipping coordinates
+                    screenX, y + offsetY, sliceWidth, h   // Canvas target destination coordinates
+                );
+            }
+        }
+    </script>
+</body>
+</html>
